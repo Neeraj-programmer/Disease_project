@@ -23,7 +23,7 @@ export default function ChatPage() {
   const typingTimeout = useRef(null);
 
   useEffect(() => {
-    const socket = io('http://localhost:5000');
+    const socket = io('/');
     socketRef.current = socket;
     socket.emit('register', user._id);
     socket.on('onlineUsers', (users) => setOnlineUsers(users));
@@ -96,7 +96,10 @@ export default function ChatPage() {
     }
   };
 
-  const allUsers = [...conversations, ...chatUsers.filter(u => !conversations.find(c => c._id === u._id))];
+  const allUsers = [
+    ...conversations.map(c => c.partner),
+    ...chatUsers.filter(u => !conversations.find(c => c.partner?._id === u._id))
+  ];
   const filtered = allUsers.filter(u => u.name?.toLowerCase().includes(searchQ.toLowerCase()));
   const isOnline = (uid) => onlineUsers.includes(uid);
 

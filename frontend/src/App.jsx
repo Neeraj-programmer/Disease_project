@@ -10,6 +10,7 @@ import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import ProfilePage from './pages/ProfilePage';
 import ResetPassword from './pages/ResetPassword';
 import AdminModeration from './pages/AdminModeration';
+import VerifyEmail from './pages/VerifyEmail';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -56,6 +57,7 @@ export default function App() {
           <Route path="/profile/:id" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminModeration /></ProtectedRoute>} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

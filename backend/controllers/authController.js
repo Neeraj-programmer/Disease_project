@@ -49,18 +49,39 @@ exports.register = async (req, res) => {
       triggers: triggers || [],
       treatments: treatments || [],
       emailVerifyToken,
+      // Auto-verify if no SMTP is configured, so users don't get locked out
+      isEmailVerified: !process.env.SMTP_HOST,
     });
 
     const verifyUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-email/${emailVerifyToken}`;
-    console.log('📧 Email Verification Link:', verifyUrl);
+    
+    const transporter = createTransporter();
+    if (transporter) {
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || '"SkinSupport AI" <noreply@skinsupport.ai>',
+        to: user.email,
+        subject: 'Verify your email – SkinSupport AI',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #2dd4bf;">SkinSupport AI</h2>
+            <p>Hi ${user.name},</p>
+            <p>Welcome to SkinSupport AI! Please click the button below to verify your email address:</p>
+            <a href="${verifyUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Verify Email</a>
+            <p style="margin-top: 20px; color: #666;">If you didn't create an account, please ignore this email.</p>
+          </div>
+        `,
+      });
+    } else {
+      console.log('📧 Email Verification Link (dev mode):', verifyUrl);
+    }
 
     const token = generateToken(user._id);
     res.status(201).json({
       user,
       token,
       verification: {
-        emailRequired: true,
-        verifyUrl,
+        emailRequired: !!process.env.SMTP_HOST,
+        verifyUrl: transporter ? undefined : verifyUrl,
       },
     });
   } catch (err) {
@@ -83,7 +104,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
-    if (!user.isEmailVerified) {
+    if (!user.isEmailVerified && process.env.SMTP_HOST) {
       return res.status(403).json({
         error: 'Please verify your email before logging in.',
         verificationRequired: true,

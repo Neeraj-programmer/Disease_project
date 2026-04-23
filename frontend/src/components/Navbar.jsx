@@ -90,11 +90,10 @@ export default function Navbar() {
                   key={link.to}
                   to={link.to}
                   id={`nav-${link.label.toLowerCase()}`}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    active
-                      ? 'bg-white/10 text-teal-400'
-                      : 'text-dark-300 hover:text-white hover:bg-white/5'
-                  }`}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${active
+                    ? 'bg-white/10 text-teal-400'
+                    : 'text-dark-300 hover:text-green-300 hover:bg-white/5'
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   <span>{link.label}</span>
@@ -113,7 +112,7 @@ export default function Navbar() {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 text-dark-300 hover:text-white"
+            className="md:hidden p-2 text-dark-300 hover:text-green-300"
             onClick={() => setMobileOpen(!mobileOpen)}
             id="nav-mobile-toggle"
           >
@@ -146,11 +145,10 @@ export default function Navbar() {
                   key={link.to}
                   to={link.to}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all ${
-                    active
-                      ? 'bg-white/10 text-teal-400'
-                      : 'text-dark-300 hover:text-white hover:bg-white/5'
-                  }`}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all ${active
+                    ? 'bg-white/10 text-teal-400'
+                    : 'text-dark-300 hover:text-white hover:bg-white/5'
+                    }`}
                 >
                   <Icon className="w-5 h-5" />
                   <span>{link.label}</span>

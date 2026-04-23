@@ -57,7 +57,7 @@ exports.getPost = async (req, res) => {
 // POST /api/posts
 exports.createPost = async (req, res) => {
   try {
-    if (!req.user?.isEmailVerified) {
+    if (!req.user?.isEmailVerified && process.env.SMTP_HOST) {
       return res.status(403).json({ error: 'Email verification is required before posting.' });
     }
 

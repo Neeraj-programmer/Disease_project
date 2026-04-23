@@ -19,7 +19,7 @@ export default function NotificationBell() {
   useEffect(() => {
     fetchNotifications();
     // Listen for real-time notifications
-    const socket = io('http://localhost:5000');
+    const socket = io('/');
     socket.emit('register', user?._id);
     socket.on('newNotification', (notif) => {
       setNotifications(prev => [notif, ...prev]);
@@ -40,7 +40,7 @@ export default function NotificationBell() {
       const res = await getNotifications();
       setNotifications(res.data.notifications || []);
       setUnread(res.data.unreadCount || 0);
-    } catch {}
+    } catch { }
   };
 
   const handleMarkAllRead = async () => {
@@ -48,7 +48,7 @@ export default function NotificationBell() {
       await markAllNotificationsRead();
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnread(0);
-    } catch {}
+    } catch { }
   };
 
   const handleMarkRead = async (id) => {
@@ -56,7 +56,7 @@ export default function NotificationBell() {
       await markNotificationRead(id);
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
       setUnread(prev => Math.max(0, prev - 1));
-    } catch {}
+    } catch { }
   };
 
   const handleClear = async () => {
@@ -64,7 +64,7 @@ export default function NotificationBell() {
       await clearAllNotifications();
       setNotifications([]);
       setUnread(0);
-    } catch {}
+    } catch { }
   };
 
   const timeAgo = (date) => {
@@ -77,7 +77,7 @@ export default function NotificationBell() {
 
   return (
     <div className="relative" ref={ref}>
-      <button onClick={() => setOpen(!open)} className="relative p-2 text-dark-300 hover:text-white transition-colors" id="notification-bell">
+      <button onClick={() => setOpen(!open)} className="relative p-2 text-dark-300 hover:text-green-300 transition-colors" id="notification-bell">
         <Bell className="w-5 h-5" />
         {unread > 0 && (
           <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-rose-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse-slow">

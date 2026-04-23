@@ -6,7 +6,7 @@ import { Sparkles, Mail, Lock, User, Heart, ArrowRight, Shield, Users, Brain, X,
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const [form, setForm] = useState({ name: '', email: '', password: '', bio: '', conditionDetails: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: ''});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -149,7 +149,7 @@ export default function AuthPage() {
                   value={form.name}
                   onChange={handleChange}
                   required={!isLogin}
-                  className="input-dark pl-10"
+                  className="input-dark !pl-10"
                   id="auth-name"
                 />
               </div>
@@ -163,7 +163,7 @@ export default function AuthPage() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="input-dark pl-10"
+                className="input-dark !pl-10"
                 id="auth-email"
               />
             </div>
@@ -177,7 +177,7 @@ export default function AuthPage() {
                 onChange={handleChange}
                 required
                 minLength={6}
-                className="input-dark pl-10"
+                className="input-dark !pl-10"
                 id="auth-password"
               />
             </div>
@@ -258,7 +258,7 @@ export default function AuthPage() {
                     <p className="text-sm text-dark-300">Enter your email and we'll send a reset link.</p>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
-                      <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder="Email address" className="input-dark pl-10" required />
+                      <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder="Email address" className="input-dark !pl-10" required />
                     </div>
                     <button type="submit" disabled={forgotLoading} className="btn-primary w-full py-2.5 text-sm disabled:opacity-50">
                       {forgotLoading ? 'Sending...' : 'Send Reset Link'}
