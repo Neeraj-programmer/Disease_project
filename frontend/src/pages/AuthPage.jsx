@@ -111,6 +111,27 @@ export default function AuthPage() {
             {isLogin ? 'Sign in to your community' : 'Start your support journey'}
           </p>
 
+          <div className="mb-5 grid grid-cols-2 rounded-xl border border-slate-200 bg-white p-1">
+            <button
+              type="button"
+              onClick={() => { setIsLogin(true); setError(''); }}
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+                isLogin ? 'bg-emerald-50 text-emerald-700' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => { setIsLogin(false); setError(''); }}
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+                !isLogin ? 'bg-sky-50 text-sky-700' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              New User? Create Account
+            </button>
+          </div>
+
           {error && (
             <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl px-4 py-3 mb-4 text-sm text-rose-400">
               {error}
