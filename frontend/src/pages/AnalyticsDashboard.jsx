@@ -17,7 +17,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-function StatCard({ icon: Icon, label, value, color, delay }) {
+function StatCard({ icon: Icon, label, value, color, delay, loading }) {
   return (
     <div className="glass rounded-2xl p-5 animate-fade-in-up" style={{ animationDelay: `${delay}ms` }}>
       <div className="flex items-center gap-3 mb-3">
