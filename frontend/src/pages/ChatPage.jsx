@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getConversations, getMessages, getChatUsers, moderateChatMessage } from '../services/api';
 import { io } from 'socket.io-client';
@@ -18,6 +19,7 @@ export default function ChatPage() {
   const [searchQ, setSearchQ] = useState('');
   const [showUsers, setShowUsers] = useState(false);
   const [chatWarning, setChatWarning] = useState('');
+  const [searchParams] = useSearchParams();
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const typingTimeout = useRef(null);
@@ -40,6 +42,11 @@ export default function ChatPage() {
     fetchConversations();
     return () => { socket.disconnect(); };
   }, []);
+
+  useEffect(() => {
+    const q = searchParams.get('search') || '';
+    setSearchQ(q);
+  }, [searchParams]);
 
   useEffect(() => { scrollToBottom(); }, [messages]);
 
@@ -110,8 +117,8 @@ export default function ChatPage() {
         <div className="p-4 border-b border-white/5">
           <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-3"><MessageCircle className="w-5 h-5 text-teal-400" />Messages</h2>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
-            <input type="text" value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Search users..." className="input-dark pl-10 py-2 text-sm" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input type="text" value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Search users..." className="input-dark !pl-10 py-2 text-sm" />
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">

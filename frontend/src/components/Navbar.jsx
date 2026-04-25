@@ -36,7 +36,11 @@ export default function Navbar() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+      if (location.pathname === '/chat') {
+        navigate(`/chat?search=${encodeURIComponent(searchQuery.trim())}`);
+      } else {
+        navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+      }
       setMobileOpen(false);
     }
   };

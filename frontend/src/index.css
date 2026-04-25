@@ -104,6 +104,7 @@ body {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 0.75rem 1rem;
+  padding-left: inherit; /* Allow pl-* utilities to work */
   color: #0f172a;
   transition: all 0.3s ease;
   width: 100%;
@@ -254,5 +255,4 @@ body {
   color: #475569;
 }
 
-/* Compatibility layer for existing dark-theme utility usage */
-.text-white { color: #0f172a !important; }
+
