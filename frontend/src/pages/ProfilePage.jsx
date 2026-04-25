@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getUserProfile, updateProfile } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import PostCard from '../components/PostCard';
-import { User, Mail, Calendar, Shield, Edit3, Save, X, Sparkles, Stethoscope, Pill, Flame, Loader, MapPin, FileText, Heart } from 'lucide-react';
+import { User, Mail, Calendar, Shield, Edit3, Save, X, Sparkles, Stethoscope, Pill, Flame, Loader, MapPin, FileText, Heart, Activity } from 'lucide-react';
 
 export default function ProfilePage() {
   const { id } = useParams();
@@ -68,7 +68,6 @@ export default function ProfilePage() {
   if (!profile) return <div className="text-center py-20 text-dark-400">User not found</div>;
 
   return (
-    <div className="max-w-4xl mx-auto animate-fade-in-up">
     <div className="max-w-5xl mx-auto animate-fade-in-up pb-12">
       {/* Profile Header & Banner */}
       <div className="relative mb-20">
@@ -252,28 +251,32 @@ export default function ProfilePage() {
             )}
           </div>
 
-      {/* Posts */}
-      <div className="mb-4 flex items-center gap-2">
-        <Heart className="w-5 h-5 text-teal-400" />
-        <h2 className="text-lg font-bold text-white">Shared Experiences</h2>
-        <span className="text-sm text-dark-400">({posts.length})</span>
-      </div>
+          {/* Posts Section within Right Column */}
+          <div className="space-y-4">
+            <div className="mb-4 flex items-center gap-2">
+              <Heart className="w-5 h-5 text-teal-400" />
+              <h2 className="text-lg font-bold text-white">Shared Experiences</h2>
+              <span className="text-sm text-dark-400">({posts.length})</span>
+            </div>
 
-      {posts.length > 0 ? (
-        <div className="space-y-4">
-          {posts.map(post => <PostCard key={post._id} post={post} />)}
+            {posts.length > 0 ? (
+              <div className="space-y-4">
+                {posts.map(post => <PostCard key={post._id} post={post} />)}
+              </div>
+            ) : (
+              <div className="glass rounded-2xl p-12 text-center">
+                <Sparkles className="w-10 h-10 text-dark-600 mx-auto mb-3" />
+                <p className="text-dark-400">No experiences shared yet</p>
+                {isOwn && (
+                  <Link to="/create" className="btn-primary inline-flex items-center gap-2 mt-4 text-sm">
+                    Share your first experience
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      ) : (
-        <div className="glass rounded-2xl p-12 text-center">
-          <Sparkles className="w-10 h-10 text-dark-600 mx-auto mb-3" />
-          <p className="text-dark-400">No experiences shared yet</p>
-          {isOwn && (
-            <Link to="/create" className="btn-primary inline-flex items-center gap-2 mt-4 text-sm">
-              Share your first experience
-            </Link>
-          )}
-        </div>
-      )}
+      </div>
     </div>
   );
 }
