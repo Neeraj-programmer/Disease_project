@@ -138,7 +138,7 @@ export default function AnalyticsDashboard() {
             <StatCard 
               icon={FileText} 
               label="Total Posts" 
-              value={overview?.totalPosts} 
+              value={overview?.totalPosts !== undefined ? String(overview.totalPosts) : undefined} 
               color="bg-gradient-to-br from-teal-500 to-teal-600" 
               delay={0}
               loading={loading}
@@ -146,7 +146,7 @@ export default function AnalyticsDashboard() {
             <StatCard 
               icon={Users} 
               label="Total Users" 
-              value={overview?.totalUsers} 
+              value={overview?.totalUsers !== undefined ? String(overview.totalUsers) : undefined} 
               color="bg-gradient-to-br from-primary-500 to-primary-600" 
               delay={100}
               loading={loading}
@@ -154,7 +154,7 @@ export default function AnalyticsDashboard() {
             <StatCard 
               icon={Activity} 
               label="Avg Severity" 
-              value={overview?.avgSeverity} 
+              value={overview?.avgSeverity ? String(overview.avgSeverity) : undefined} 
               color="bg-gradient-to-br from-accent-500 to-accent-600" 
               delay={200}
               loading={loading}
@@ -162,12 +162,18 @@ export default function AnalyticsDashboard() {
             <StatCard 
               icon={TrendingUp} 
               label="This Month" 
-              value={overview?.postsThisMonth} 
+              value={overview?.postsThisMonth !== undefined ? String(overview.postsThisMonth) : undefined} 
               color="bg-gradient-to-br from-rose-500 to-rose-600" 
               delay={300}
               loading={loading}
             />
           </div>
+
+          {!loading && !overview && (
+            <div className="glass rounded-xl p-6 text-center">
+              <p className="text-dark-300">No community data available yet. Start sharing experiences to see analytics!</p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ChartCard title="Severity Distribution" icon={Activity} loading={loading}>

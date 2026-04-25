@@ -75,6 +75,10 @@ const postSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for faster filtering and analytics
+postSchema.index({ isPrivate: 1, moderationStatus: 1, createdAt: -1 });
+postSchema.index({ author: 1 });
+
 // Text index for search
 postSchema.index({
   title: 'text',
