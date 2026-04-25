@@ -119,8 +119,11 @@ export default function PostDetail() {
               <img 
                 key={i} 
                 src={img.startsWith('http') ? img : `https://disease-project-1.onrender.com${img}`} 
-                alt={`Post image ${i + 1}`} 
-                className="w-full rounded-3xl object-cover max-h-[500px] shadow-2xl shadow-slate-200/50 hover:scale-[1.01] transition-transform duration-500" 
+                alt={`Experience Photo ${i + 1}`} 
+                className="w-full rounded-3xl object-cover max-h-[500px] shadow-2xl shadow-slate-200/50 hover:scale-[1.01] transition-transform duration-500 bg-slate-100" 
+                onError={(e) => {
+                  e.target.style.display = 'none'; // Hide broken images if Render deleted them
+                }}
               />
             ))}
           </div>

@@ -233,11 +233,15 @@ export default function PostCard({ post, onUpdate }) {
       {localPost.images?.length > 0 && (
         <div className={`grid gap-2 mb-4 ${localPost.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
           {localPost.images.map((img, i) => (
-            <div key={i} className="relative aspect-video rounded-xl overflow-hidden group shadow-md">
+            <div key={i} className="relative aspect-video rounded-xl overflow-hidden group shadow-md bg-slate-100">
               <img 
                 src={img.startsWith('http') ? img : `https://disease-project-1.onrender.com${img}`} 
                 alt="" 
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.style.display = 'none';
+                }}
               />
             </div>
           ))}
