@@ -103,8 +103,10 @@ body {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 0.75rem 1rem;
-  padding-left: inherit; /* Allow pl-* utilities to work */
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  padding-right: 1rem;
+  padding-left: 1rem; /* Default padding */
   color: #0f172a;
   transition: all 0.3s ease;
   width: 100%;
