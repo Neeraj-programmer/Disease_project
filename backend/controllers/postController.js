@@ -12,42 +12,79 @@ const {
 // ── POST CRUD ──
 
 // GET /api/posts – list all public posts
+// Ye function database se saari posts nikal kar frontend ko bhejta hai
 exports.getPosts = async (req, res) => {
   try {
+    // Frontend se filter karne ke options aa sakte hain (jaise kis tag ki post chahiye)
     const { tag, symptom, treatment, severity, search, page = 1, limit = 20 } = req.query;
+    
+    // Default filter: Sirf public posts dikhao jo block nahi hui hain
     const filter = {
       isPrivate: false,
       moderationStatus: { $in: ['published', 'approved'] },
     };
 
-    if (tag) filter.tags = { $in: tag.split(',') };
-    if (symptom) filter.symptoms = { $in: symptom.split(',') };
-    if (treatment) filter.treatments = { $in: treatment.split(',') };
-    if (severity) filter.severityLevel = severity;
-    if (search) filter.$text = { $search: search };
+    // Agar frontend ne koi filter bheja hai, toh usko filter object me add karo
+    if (tag) {
+      filter.tags = { $in: tag.split(',') }; // Tag array me hona chahiye
+    }
+    if (symptom) {
+      filter.symptoms = { $in: symptom.split(',') };
+    }
+    if (treatment) {
+      filter.treatments = { $in: treatment.split(',') };
+    }
+    if (severity) {
+      filter.severityLevel = severity;
+    }
+    if (search) {
+      // Agar user ne search me kuch likha hai, toh database me text search karo
+      filter.$text = { $search: search };
+    }
 
+    // Pagination (jaise Google me page 1, page 2 hota hai)
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    const total = await Post.countDocuments(filter);
+    const total = await Post.countDocuments(filter); // Total kitni posts hain
+    
+    // Database se posts laana, aur uske author ki thodi si detail bhi sath me laana (.populate)
     const posts = await Post.find(filter)
       .populate('author', 'name avatar isAnonymous isVerified trustLevel')
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1 }) // Sabse nayi post sabse upar (descending order)
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean(); // .lean() data ko simple object me convert karta hai taaki hum usme naye fields add kar sakein
 
+    // Har ek post ke liye check karo ki uspar kitne comments aaye hain
+    for (const post of posts) {
+      post.commentCount = await Comment.countDocuments({ post: post._id });
+    }
+
+    // Aakhri me data frontend ko bhej do
     res.json({ posts, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
   } catch (err) {
+    // Agar koi error aata hai toh 500 status code ke sath bhej do
     res.status(500).json({ error: err.message });
   }
 };
 
 // GET /api/posts/:id
+// Kisi ek specific post ko dekhne ke liye (Post Detail Page)
 exports.getPost = async (req, res) => {
   try {
+    // URL me aayi ID se post ko dhoondho aur author ki details sath me laao
     const post = await Post.findById(req.params.id).populate('author', 'name avatar bio isAnonymous conditionDetails isVerified trustLevel');
-    if (!post) return res.status(404).json({ error: 'Post not found' });
+    
+    // Agar aisi koi post database me nahi hai
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    
+    // Us post se jude hue saare comments bhi nikal lo database se
     const comments = await Comment.find({ post: post._id })
       .populate('author', 'name avatar isAnonymous')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 }); // Naye comments upar
+      
+    // Post aur comments dono bhej do
     res.json({ post, comments });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -55,37 +92,47 @@ exports.getPost = async (req, res) => {
 };
 
 // POST /api/posts
+// Nayi post create karne ka function
 exports.createPost = async (req, res) => {
   try {
+    // Agar admin ne email verification zaroori rakha hai, aur user verified nahi hai
     if (!req.user?.isEmailVerified && process.env.SMTP_HOST) {
       return res.status(403).json({ error: 'Email verification is required before posting.' });
     }
 
+    // Agar kisi admin ne is user ko ban kiya hua hai
     if (req.user?.isBanned) {
       return res.status(403).json({ error: 'Your account is restricted from posting.' });
     }
 
+    // Jo data frontend se aaya hai, usme likhne wale ka ID add kardo
     const postData = { ...req.body, author: req.userId };
+    
+    // Ye fields khali nahi ho sakte
     const requiredFields = ['title', 'description', 'outcome'];
-
     for (const field of requiredFields) {
       if (!postData[field] || !String(postData[field]).trim()) {
         return res.status(400).json({ error: `${field} is required` });
       }
     }
 
-    // Handle uploaded images
+    // Agar user ne images upload ki hain, toh unka path save karo
     if (req.files && req.files.length > 0) {
-      postData.images = req.files.map((f) => `/uploads/${f.filename}`);
+      postData.images = req.files.map((file) => `/uploads/${file.filename}`);
     }
 
-    // Prevent repeated similar posts from same user
+    // ── SPAM CHECK ──
+    // Check karo ki is user ne wahi same post pehle toh nahi ki thi?
     const duplicateCheck = await checkDuplicatePost(req.userId, postData.title, postData.description, Post);
     if (duplicateCheck.isDuplicate) {
       return res.status(429).json({ error: duplicateCheck.reason });
     }
 
+    // ── MODERATION (SAFETY) CHECK ──
+    // Post ka saara text ek sath jod lo
     const fullText = `${postData.title || ''} ${postData.description || ''} ${postData.results || ''} ${postData.advice || ''}`;
+    
+    // Content ko check karo ki usme kuch galat/fake doctor claim ya spam toh nahi hai
     const moderation = moderateContent(fullText);
     postData.trustScore = moderation.trustScore;
     postData.moderationFlags = moderation.flags;
@@ -120,12 +167,14 @@ exports.createPost = async (req, res) => {
       }
     }
 
+    // Database me post save karo
     const post = await Post.create(postData);
 
-    // Run AI analysis
+    // ── AI ANALYSIS ──
+    // AI se us post ki ek choti summary aur aasan points banwao
     post.aiSummary = await ai.summarize(post.description);
     post.aiInsights = await ai.extractInsights(post);
-    await post.save();
+    await post.save(); // AI ka result bhi database me save kardo
 
     const populated = await post.populate('author', 'name avatar isAnonymous isVerified trustLevel');
     res.status(201).json({
@@ -198,27 +247,38 @@ exports.deletePost = async (req, res) => {
   }
 };
 
-// ── REACTIONS ──
+// ── REACTIONS (Liking/Reacting to a post) ──
 
 // POST /api/posts/:id/react
+// Ye function allow karta hai users ko dusre ki posts par react karne ke liye
 exports.reactToPost = async (req, res) => {
   try {
     const { type } = req.body; // 'relatable', 'support', 'helpful'
-    if (!['relatable', 'support', 'helpful'].includes(type)) {
+    
+    // Check karo ki user ne in 3 ke alawa koi aur fake reaction toh nahi bheja
+    if (type !== 'relatable' && type !== 'support' && type !== 'helpful') {
       return res.status(400).json({ error: 'Invalid reaction type' });
     }
 
+    // Post ko database me dhoondo
     const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ error: 'Post not found' });
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
 
     const userId = req.userId;
-    const index = post.reactions[type].indexOf(userId);
-    if (index > -1) {
-      post.reactions[type].splice(index, 1); // toggle off
+    // Pata karo ki kya is user ne pehle se is type ka reaction diya hua hai?
+    const indexOfReaction = post.reactions[type].indexOf(userId);
+    
+    if (indexOfReaction > -1) {
+      // Agar pehle se diya hua tha, toh iska matlab user reaction hata raha hai (Toggle Off / Unlike)
+      post.reactions[type].splice(indexOfReaction, 1); 
     } else {
-      post.reactions[type].push(userId); // toggle on
-      // Send notification to post author
-      if (post.author.toString() !== userId.toString()) {
+      // Agar pehle se reaction nahi diya tha, toh list me add kardo (Toggle On / Like)
+      post.reactions[type].push(userId); 
+      
+      // Post likhne wale ko notification bhejo ki usko reaction mila hai
+      if (post.author.toString() !== userId.toString()) { // Khud ki post pe react pe notification nahi jayega
         await Notification.create({
           recipient: post.author,
           sender: userId,
@@ -228,6 +288,7 @@ exports.reactToPost = async (req, res) => {
         });
       }
     }
+    
     await post.save();
     res.json({ reactions: post.reactions });
   } catch (err) {

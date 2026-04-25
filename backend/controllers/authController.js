@@ -28,33 +28,41 @@ const createTransporter = () => {
 };
 
 // POST /api/auth/register
+// Naya account banane ka function
 exports.register = async (req, res) => {
   try {
+    // 1. Frontend se user ka data lena
     const { name, email, password, bio, conditionDetails, skinCondition, triggers, treatments } = req.body;
 
+    // 2. Check karna ki is email se pehle koi account toh nahi bana?
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      // Agar account hai, toh error bhej do
       return res.status(400).json({ error: 'Email already registered' });
     }
 
+    // 3. Email verify karne ke liye ek random secret code banana
     const emailVerifyToken = generateVerificationToken();
 
+    // 4. Database me naya user create karna
     const user = await User.create({
       name,
       email,
-      password,
+      password, // Note: Model ke andar pre-save hook is password ko encrypt kar dega
       bio: bio || '',
       conditionDetails: conditionDetails || '',
       skinCondition: skinCondition || 'psoriasis',
       triggers: triggers || [],
       treatments: treatments || [],
       emailVerifyToken,
-      // Auto-verify if no SMTP is configured, so users don't get locked out
+      // Agar email server setup nahi hai, toh user ko directly verified maan lo taaki wo app use kar sake
       isEmailVerified: !process.env.SMTP_HOST,
     });
 
+    // 5. Verification Link banana (Jo email me bheja jayega)
     const verifyUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-email/${emailVerifyToken}`;
     
+    // 6. Email send karne ka code
     const transporter = createTransporter();
     if (transporter) {
       await transporter.sendMail({
@@ -72,16 +80,20 @@ exports.register = async (req, res) => {
         `,
       });
     } else {
+      // Agar real email setup nahi hai, toh link terminal me print kar do (Testing ke liye)
       console.log('📧 Email Verification Link (dev mode):', verifyUrl);
     }
 
+    // 7. Naye user ke liye JWT Token generate karna (Taaki wo login ho jaye)
     const token = generateToken(user._id);
+    
+    // 8. Frontend ko response bhejna
     res.status(201).json({
       user,
       token,
       verification: {
         emailRequired: !!process.env.SMTP_HOST,
-        verifyUrl: transporter ? undefined : verifyUrl,
+        verifyUrl: transporter ? undefined : verifyUrl, // Dev mode me URL frontend ko bhi de do test karne ke liye
       },
     });
   } catch (err) {
@@ -90,20 +102,27 @@ exports.register = async (req, res) => {
 };
 
 // POST /api/auth/login
+// User ko login karwane ka function
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // 1. Email se user ko database me dhoondo
     const user = await User.findOne({ email });
     if (!user) {
+      // Agar user nahi mila, toh error
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
+    // 2. Password check karo
+    // Note: comparePassword function humne User model me banaya hai jo bcrypt use karta hai
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      // Agar password galat hai
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
+    // 3. Email verified hai ya nahi check karo
     if (!user.isEmailVerified && process.env.SMTP_HOST) {
       return res.status(403).json({
         error: 'Please verify your email before logging in.',
@@ -111,6 +130,7 @@ exports.login = async (req, res) => {
       });
     }
 
+    // 4. Sab sahi hai, toh Token generate karke bhej do
     const token = generateToken(user._id);
     res.json({ user, token });
   } catch (err) {
