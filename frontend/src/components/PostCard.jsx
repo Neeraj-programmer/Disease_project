@@ -173,7 +173,7 @@ export default function PostCard({ post: propPost, onUpdate }) {
           {post.images.map((img, i) => (
             <div key={i} className="relative aspect-video rounded-xl overflow-hidden group shadow-md bg-slate-100">
               <img 
-                src={img.startsWith('http') ? img : `https://disease-project-1.onrender.com${img}`} 
+                src={img.startsWith('http') ? img : img} 
                 alt="" 
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                 onError={(e) => {

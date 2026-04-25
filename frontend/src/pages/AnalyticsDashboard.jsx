@@ -26,7 +26,9 @@ function StatCard({ icon: Icon, label, value, color, delay }) {
         </div>
         <span className="text-sm text-dark-300">{label}</span>
       </div>
-      <p className="text-3xl font-bold text-white">{value ?? '—'}</p>
+      <p className="text-3xl font-bold text-white">
+        {value !== undefined && value !== null ? value : (loading ? '...' : '—')}
+      </p>
     </div>
   );
 }
@@ -136,30 +138,34 @@ export default function AnalyticsDashboard() {
             <StatCard 
               icon={FileText} 
               label="Total Posts" 
-              value={overview?.totalPosts !== undefined ? overview.totalPosts : (loading ? '...' : '0')} 
+              value={overview?.totalPosts} 
               color="bg-gradient-to-br from-teal-500 to-teal-600" 
-              delay={0} 
+              delay={0}
+              loading={loading}
             />
             <StatCard 
               icon={Users} 
               label="Total Users" 
-              value={overview?.totalUsers !== undefined ? overview.totalUsers : (loading ? '...' : '0')} 
+              value={overview?.totalUsers} 
               color="bg-gradient-to-br from-primary-500 to-primary-600" 
-              delay={100} 
+              delay={100}
+              loading={loading}
             />
             <StatCard 
               icon={Activity} 
               label="Avg Severity" 
-              value={overview?.avgSeverity || (loading ? '...' : '—')} 
+              value={overview?.avgSeverity} 
               color="bg-gradient-to-br from-accent-500 to-accent-600" 
-              delay={200} 
+              delay={200}
+              loading={loading}
             />
             <StatCard 
               icon={TrendingUp} 
               label="This Month" 
-              value={overview?.postsThisMonth !== undefined ? overview.postsThisMonth : (loading ? '...' : '0')} 
+              value={overview?.postsThisMonth} 
               color="bg-gradient-to-br from-rose-500 to-rose-600" 
-              delay={300} 
+              delay={300}
+              loading={loading}
             />
           </div>
 
