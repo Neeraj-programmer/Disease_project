@@ -123,8 +123,7 @@ export default function ChatPage() {
               value={searchQ} 
               onChange={e => setSearchQ(e.target.value)} 
               placeholder="Search users..." 
-              className="input-dark py-2 text-sm" 
-              style={{ paddingLeft: '2.5rem' }}
+              className="input-dark input-with-icon py-2 text-sm" 
             />
           </div>
         </div>

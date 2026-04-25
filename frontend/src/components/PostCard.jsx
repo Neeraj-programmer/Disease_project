@@ -177,8 +177,7 @@ export default function PostCard({ post: propPost, onUpdate }) {
                 alt="" 
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                 onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentElement.style.display = 'none';
+                  console.error('Image failed to load:', e.target.src);
                 }}
               />
             </div>
