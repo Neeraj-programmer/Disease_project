@@ -74,7 +74,9 @@ export default function AnalyticsDashboard() {
       setTreatments(treatRes.data.treatments || []);
       setSeverity(sevRes.data.severity || []);
       setOverview(ovRes.data);
+      console.log('Analytics Overview:', ovRes.data);
     } catch (err) {
+      console.error('Analytics Error:', err);
       setError('Failed to load analytics data');
     } finally {
       setLoading(false);
@@ -131,10 +133,34 @@ export default function AnalyticsDashboard() {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={FileText} label="Total Posts" value={overview?.totalPosts} color="bg-gradient-to-br from-teal-500 to-teal-600" delay={0} />
-            <StatCard icon={Users} label="Total Users" value={overview?.totalUsers} color="bg-gradient-to-br from-primary-500 to-primary-600" delay={100} />
-            <StatCard icon={Activity} label="Avg Severity" value={overview?.avgSeverity || '—'} color="bg-gradient-to-br from-accent-500 to-accent-600" delay={200} />
-            <StatCard icon={TrendingUp} label="This Month" value={overview?.postsThisMonth} color="bg-gradient-to-br from-rose-500 to-rose-600" delay={300} />
+            <StatCard 
+              icon={FileText} 
+              label="Total Posts" 
+              value={overview?.totalPosts !== undefined ? overview.totalPosts : (loading ? '...' : '0')} 
+              color="bg-gradient-to-br from-teal-500 to-teal-600" 
+              delay={0} 
+            />
+            <StatCard 
+              icon={Users} 
+              label="Total Users" 
+              value={overview?.totalUsers !== undefined ? overview.totalUsers : (loading ? '...' : '0')} 
+              color="bg-gradient-to-br from-primary-500 to-primary-600" 
+              delay={100} 
+            />
+            <StatCard 
+              icon={Activity} 
+              label="Avg Severity" 
+              value={overview?.avgSeverity || (loading ? '...' : '—')} 
+              color="bg-gradient-to-br from-accent-500 to-accent-600" 
+              delay={200} 
+            />
+            <StatCard 
+              icon={TrendingUp} 
+              label="This Month" 
+              value={overview?.postsThisMonth !== undefined ? overview.postsThisMonth : (loading ? '...' : '0')} 
+              color="bg-gradient-to-br from-rose-500 to-rose-600" 
+              delay={300} 
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
