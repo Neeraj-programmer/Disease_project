@@ -25,7 +25,8 @@ export default function ChatPage() {
   const typingTimeout = useRef(null);
 
   useEffect(() => {
-    const socket = io('/');
+    const SOCKET_URL = import.meta.env.PROD ? 'https://disease-project-1.onrender.com' : '/';
+    const socket = io(SOCKET_URL);
     socketRef.current = socket;
     socket.emit('register', user._id);
     socket.on('onlineUsers', (users) => setOnlineUsers(users));

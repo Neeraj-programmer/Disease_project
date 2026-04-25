@@ -129,7 +129,7 @@ exports.getOverview = async (req, res) => {
           improved: { $sum: { $cond: [{ $eq: ['$outcome', 'improved'] }, 1, 0] } },
         },
       },
-      { $match: { total: { $gte: 2 } } },
+      { $match: { total: { $gte: 1 } } },
       {
         $project: {
           _id: 1,
@@ -152,6 +152,34 @@ exports.getOverview = async (req, res) => {
       { $limit: 1 },
     ]);
 
+    const severityMap = { 'mild': 1, 'moderate': 2, 'severe': 3, 'very-severe': 4 };
+    const revSeverityMap = { 1: 'Mild', 2: 'Moderate', 3: 'Severe', 4: 'Very Severe' };
+
+    const severityAvgAgg = await Post.aggregate([
+      { $match: { isPrivate: false, severityLevel: { $in: ['mild', 'moderate', 'severe', 'very-severe'] } } },
+      {
+        $group: {
+          _id: null,
+          avg: {
+            $avg: {
+              $switch: {
+                branches: [
+                  { case: { $eq: ['$severityLevel', 'mild'] }, then: 1 },
+                  { case: { $eq: ['$severityLevel', 'moderate'] }, then: 2 },
+                  { case: { $eq: ['$severityLevel', 'severe'] }, then: 3 },
+                  { case: { $eq: ['$severityLevel', 'very-severe'] }, then: 4 },
+                ],
+                default: 2,
+              },
+            },
+          },
+        },
+      },
+    ]);
+
+    const avgVal = severityAvgAgg[0]?.avg || 0;
+    const avgSeverityLabel = revSeverityMap[Math.round(avgVal)] || '—';
+
     res.json({
       totalPosts,
       totalUsers,
@@ -159,6 +187,7 @@ exports.getOverview = async (req, res) => {
       postsOverTime,
       outcomeDistribution,
       treatmentOutcomeInsights,
+      avgSeverity: avgSeverityLabel,
       topTrigger: triggerCounts[0] || null,
     });
   } catch (err) {

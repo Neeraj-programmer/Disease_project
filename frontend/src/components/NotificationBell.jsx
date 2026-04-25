@@ -19,7 +19,8 @@ export default function NotificationBell() {
   useEffect(() => {
     fetchNotifications();
     // Listen for real-time notifications
-    const socket = io('/');
+    const SOCKET_URL = import.meta.env.PROD ? 'https://disease-project-1.onrender.com' : '/';
+    const socket = io(SOCKET_URL);
     socket.emit('register', user?._id);
     socket.on('newNotification', (notif) => {
       setNotifications(prev => [notif, ...prev]);
