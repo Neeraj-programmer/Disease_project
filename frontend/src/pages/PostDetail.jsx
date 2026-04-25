@@ -82,7 +82,7 @@ export default function PostDetail() {
 
   return (
     <div className="max-w-3xl mx-auto animate-fade-in-up">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-dark-300 hover:text-white transition-colors mb-6 text-sm">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors mb-6 text-sm font-semibold">
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
 
@@ -94,8 +94,8 @@ export default function PostDetail() {
               {post.isAnonymous ? <Shield className="w-5 h-5 text-white" /> : <User className="w-5 h-5 text-white" />}
             </div>
             <div>
-              <Link to={post.isAnonymous ? '#' : `/profile/${post.author?._id}`} className="font-semibold text-white hover:text-teal-400 transition-colors">{authorName}</Link>
-              <p className="text-xs text-dark-400 flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+              <Link to={post.isAnonymous ? '#' : `/profile/${post.author?._id}`} className="font-bold text-slate-800 hover:text-teal-600 transition-colors">{authorName}</Link>
+              <p className="text-xs text-slate-400 flex items-center gap-1 font-medium"><Clock className="w-3 h-3" />{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
             </div>
           </div>
           {user?._id === post.author?._id && (
@@ -103,9 +103,9 @@ export default function PostDetail() {
           )}
         </div>
 
-        <span className={`tag ${SEVERITY_COLORS[post.severityLevel]} mb-3 inline-block`}>{post.severityLevel}</span>
-        <h1 className="text-xl sm:text-2xl font-bold text-white mb-4">{post.title}</h1>
-        <p className="text-dark-200 leading-relaxed whitespace-pre-wrap mb-6">{post.description}</p>
+        <span className={`tag ${SEVERITY_COLORS[post.severityLevel]} mb-3 inline-block font-semibold uppercase tracking-wider text-[10px]`}>{post.severityLevel}</span>
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mb-5 leading-tight">{post.title}</h1>
+        <p className="text-slate-700 leading-relaxed whitespace-pre-wrap mb-8 text-lg">{post.description}</p>
 
         {post.startTimeline && <div className="glass rounded-xl p-3 mb-4 text-sm"><span className="text-dark-400">Timeline:</span> <span className="text-dark-200">{post.startTimeline}</span></div>}
         {post.results && <div className="glass rounded-xl p-3 mb-4 text-sm"><span className="text-teal-400 font-medium">Results:</span> <span className="text-dark-200">{post.results}</span></div>}
@@ -114,9 +114,14 @@ export default function PostDetail() {
 
         {/* Images */}
         {post.images?.length > 0 && (
-          <div className={`grid gap-2 mb-6 ${post.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          <div className={`grid gap-4 mb-8 ${post.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
             {post.images.map((img, i) => (
-              <img key={i} src={img} alt={`Post image ${i + 1}`} className="w-full rounded-xl object-cover max-h-80" />
+              <img 
+                key={i} 
+                src={img.startsWith('http') ? img : `https://disease-project-1.onrender.com${img}`} 
+                alt={`Post image ${i + 1}`} 
+                className="w-full rounded-3xl object-cover max-h-[500px] shadow-2xl shadow-slate-200/50 hover:scale-[1.01] transition-transform duration-500" 
+              />
             ))}
           </div>
         )}
@@ -163,7 +168,7 @@ export default function PostDetail() {
 
       {/* Comments */}
       <div className="glass rounded-2xl p-6">
-        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><MessageSquare className="w-5 h-5 text-teal-400" />Comments ({comments.length})</h2>
+        <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><MessageSquare className="w-5 h-5 text-teal-500" />Comments ({comments.length})</h2>
 
         <form onSubmit={handleComment} className="mb-6">
           <textarea value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Share your thoughts..." rows={3} className="input-dark resize-y mb-3" id="comment-input" />
@@ -185,7 +190,7 @@ export default function PostDetail() {
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
                     <User className="w-3.5 h-3.5 text-white" />
                   </div>
-                  <span className="text-sm font-medium text-white">{c.isAnonymous ? 'Anonymous' : c.author?.name}</span>
+                  <span className="text-sm font-bold text-slate-800">{c.isAnonymous ? 'Anonymous' : c.author?.name}</span>
                   <span className="text-xs text-dark-500">{new Date(c.createdAt).toLocaleDateString()}</span>
                 </div>
                 {user?._id === c.author?._id && (

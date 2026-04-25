@@ -119,20 +119,28 @@ export default function CreatePost() {
 
   return (
     <div className="max-w-3xl mx-auto animate-fade-in-up">
-      <div className="mb-8 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-primary-500 flex items-center justify-center"><Sparkles className="w-5 h-5 text-white" /></div>
-        <div><h1 className="text-2xl font-bold text-white">Share Your Experience</h1><p className="text-sm text-dark-300">Your story can help others on their journey</p></div>
+      <div className="mb-10 flex items-center gap-5">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-400 to-primary-500 flex items-center justify-center shadow-lg shadow-teal-500/20 rotate-3">
+          <Sparkles className="w-8 h-8 text-white" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Share Your Experience</h1>
+          <p className="text-slate-500 font-medium">Your story can help others on their journey</p>
+        </div>
       </div>
 
       {error && <div className="glass rounded-xl p-4 mb-6 border-rose-500/30 flex items-center gap-3"><AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" /><p className="text-rose-400 text-sm">{error}</p></div>}
 
       <form onSubmit={onSubmit} className="space-y-6">
-        <div className="glass rounded-2xl p-6 space-y-5">
-          <div className="rounded-xl border border-amber-300/30 bg-amber-100/40 p-3 text-sm text-amber-900">
+        <div className="glass rounded-3xl p-8 space-y-6 shadow-xl shadow-slate-200/50">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
             No doctor/hospital promotion, contact details, affiliate links, or guaranteed cure claims are allowed.
           </div>
-          <div><label className="flex items-center gap-2 text-sm font-medium text-dark-200 mb-2"><FileText className="w-4 h-4" />Title</label>
-            <input type="text" name="title" value={form.title} onChange={onChange} placeholder="e.g., My 6-month journey with scalp psoriasis..." className="input-dark text-lg" id="create-title" required /></div>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-semibold text-slate-700"><FileText className="w-4 h-4 text-teal-500" />Title</label>
+            <input type="text" name="title" value={form.title} onChange={onChange} placeholder="e.g., My 6-month journey with scalp psoriasis..." className="input-dark text-lg !py-3" id="create-title" required />
+          </div>
           <div><label className="flex items-center gap-2 text-sm font-medium text-dark-200 mb-2"><FileText className="w-4 h-4" />Your Story</label>
             <textarea name="description" value={form.description} onChange={onChange} placeholder="Share your experience in detail..." rows={6} className="input-dark resize-y" id="create-description" required /></div>
           <div><label className="text-sm font-medium text-dark-200 mb-3 block">Severity Level</label>

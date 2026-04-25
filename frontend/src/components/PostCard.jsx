@@ -174,14 +174,14 @@ export default function PostCard({ post, onUpdate }) {
           <div>
             <Link
               to={localPost.isAnonymous ? '#' : `/profile/${localPost.author?._id}`}
-              className="text-sm font-semibold text-white hover:text-teal-400 transition-colors"
+              className="text-sm font-bold text-slate-800 hover:text-teal-600 transition-colors"
             >
               {authorName}
             </Link>
             {localPost.author?.isVerified && (
               <span className="tag tag-teal">Verified User</span>
             )}
-            <div className="flex items-center gap-2 text-xs text-dark-400">
+            <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400">
               <Clock className="w-3 h-3" />
               {new Date(localPost.createdAt).toLocaleDateString('en-US', {
                 month: 'short',
@@ -209,7 +209,7 @@ export default function PostCard({ post, onUpdate }) {
       </div>
 
       {/* Title */}
-      <h3 className="text-lg font-bold text-white mb-2">{localPost.title}</h3>
+      <h3 className="text-xl font-black text-slate-800 mb-2 leading-tight">{localPost.title}</h3>
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <span className="tag tag-primary">Trust {localPost.trustScore ?? 100}/100</span>
         {localPost.outcome && (
@@ -221,7 +221,7 @@ export default function PostCard({ post, onUpdate }) {
       </div>
 
       {/* Description */}
-      <p className="text-dark-200 text-sm leading-relaxed mb-3">
+      <p className="text-slate-600 text-sm leading-relaxed mb-4 font-medium">
         {expanded
           ? localPost.description
           : localPost.description?.length > 200
@@ -233,8 +233,12 @@ export default function PostCard({ post, onUpdate }) {
       {localPost.images?.length > 0 && (
         <div className={`grid gap-2 mb-4 ${localPost.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
           {localPost.images.map((img, i) => (
-            <div key={i} className="relative aspect-video rounded-xl overflow-hidden group">
-              <img src={img} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+            <div key={i} className="relative aspect-video rounded-xl overflow-hidden group shadow-md">
+              <img 
+                src={img.startsWith('http') ? img : `https://disease-project-1.onrender.com${img}`} 
+                alt="" 
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+              />
             </div>
           ))}
         </div>
