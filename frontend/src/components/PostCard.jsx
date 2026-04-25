@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Handshake, Lightbulb, MessageSquare, Bookmark, BookmarkCheck, Sparkles, ChevronDown, ChevronUp, Clock, Shield, Send, User } from 'lucide-react';
+import { Heart, Handshake, Lightbulb, MessageSquare, Bookmark, BookmarkCheck, Sparkles, ChevronDown, ChevronUp, Clock, Shield, Send, User, Lock, Globe, Eye, EyeOff } from 'lucide-react';
 import { reactToPost, savePost, summarizePost, getPost, addComment, reportPost } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -196,9 +196,16 @@ export default function PostCard({ post, onUpdate }) {
             </div>
           </div>
         </div>
-        <span className={`tag ${SEVERITY_COLORS[localPost.severityLevel] || 'tag-primary'}`}>
-          {localPost.severityLevel || 'moderate'}
-        </span>
+        <div className="flex items-center gap-2">
+          {localPost.isPrivate ? (
+            <span className="tag tag-rose flex items-center gap-1"><Lock className="w-3 h-3" /> Private</span>
+          ) : (
+            <span className="tag tag-teal flex items-center gap-1"><Globe className="w-3 h-3" /> Public</span>
+          )}
+          <span className={`tag ${SEVERITY_COLORS[localPost.severityLevel] || 'tag-primary'}`}>
+            {localPost.severityLevel || 'moderate'}
+          </span>
+        </div>
       </div>
 
       {/* Title */}
@@ -221,6 +228,18 @@ export default function PostCard({ post, onUpdate }) {
           ? localPost.description.substring(0, 200) + '...'
           : localPost.description}
       </p>
+
+      {/* Images */}
+      {localPost.images?.length > 0 && (
+        <div className={`grid gap-2 mb-4 ${localPost.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          {localPost.images.map((img, i) => (
+            <div key={i} className="relative aspect-video rounded-xl overflow-hidden group">
+              <img src={img} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+            </div>
+          ))}
+        </div>
+      )}
+
       {localPost.description?.length > 200 && (
         <button
           onClick={() => setExpanded(!expanded)}

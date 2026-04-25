@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPost } from '../services/api';
-import { Send, Sparkles, AlertTriangle, Plus, X, Eye, EyeOff, Lock, Unlock, ChevronDown, ChevronUp, Stethoscope, Pill, Flame, Tag, FileText, Lightbulb, XCircle, CheckCircle, ImagePlus } from 'lucide-react';
+import { Send, Sparkles, AlertTriangle, Plus, X, Eye, EyeOff, Lock, Unlock, ChevronDown, ChevronUp, Stethoscope, Pill, Flame, Tag, FileText, Lightbulb, XCircle, CheckCircle, ImagePlus, Globe } from 'lucide-react';
 
 const SEVERITY_OPTIONS = [
   { value: 'mild', label: 'Mild', color: 'text-teal-400', bg: 'bg-teal-400/10' },
@@ -209,8 +209,8 @@ export default function CreatePost() {
             {form.isAnonymous ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}{form.isAnonymous ? 'Anonymous' : 'With Name'}
           </button>
           <button type="button" onClick={() => setForm({ ...form, isPrivate: !form.isPrivate })}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${form.isPrivate ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-white/5 text-dark-400 border border-white/5 hover:bg-white/8'}`}>
-            {form.isPrivate ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}{form.isPrivate ? 'Private' : 'Public'}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${form.isPrivate ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-teal-500/20 text-teal-400 border border-teal-500/30'}`}>
+            {form.isPrivate ? <Lock className="w-4 h-4" /> : <Globe className="w-4 h-4" />}{form.isPrivate ? 'Private' : 'Public'}
           </button>
         </div>
 
