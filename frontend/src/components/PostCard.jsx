@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Heart, Handshake, Lightbulb, MessageSquare, Bookmark, BookmarkCheck, Sparkles, ChevronDown, ChevronUp, Clock, Shield, Send, User, Lock, Globe, Eye, EyeOff } from 'lucide-react';
-import { reactToPost, savePost, summarizePost, getPost, addComment, reportPost } from '../services/api';
+import { reactToPost, savePost, summarizePost, addComment, reportPost } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 // Ye color codes hain alag-alag severity (bimari kitni serious hai) ke hisaab se
@@ -12,20 +12,21 @@ const SEVERITY_COLORS = {
   'very-severe': 'tag-rose',// Bahut serious -> Red tag
 };
 
-export default function PostCard({ post, onUpdate }) {
+export default function PostCard({ post: propPost, onUpdate }) {
   // Global auth state se current logged-in user ki details nikalna
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   // ── LOCAL STATES ──
+  // post: Post ki details ko state me rakhna taaki like/comment aane par real-time me update ho sake
+  const [post, setPost] = useState(propPost);
+  
   // expanded: Agar description bahut lamba hai, toh pehle thoda sa dikhao, "Read More" pe click karne par pura dikhao
   const [expanded, setExpanded] = useState(false);
   
   // showAI: AI ki summary dikhani hai ya nahi
   const [showAI, setShowAI] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-  
-  // localPost: Post ki details ko state me rakhna taaki like/comment aane par real-time me update ho sake
-  const [localPost, setLocalPost] = useState(post);
   const [reporting, setReporting] = useState(false);
 
   // ── COMMENTS STATES ──
@@ -35,22 +36,27 @@ export default function PostCard({ post, onUpdate }) {
   const [commentText, setCommentText] = useState(''); // User jo naya comment type kar raha hai
   const [submittingComment, setSubmittingComment] = useState(false); // Jab comment backend pe save ho raha ho
 
+  // Effect to sync when prop changes
+  useEffect(() => {
+    setPost(propPost);
+  }, [propPost]);
+
   // Check karna ki kya ye post us user ne hi likhi hai jo abhi login hai?
-  const isAuthor = user?._id === (localPost.author?._id || localPost.author);
+  const isAuthor = user?._id === (post.author?._id || post.author);
   
   // Author ka naam nikalna (Agar usne anonymous post kiya hai toh naam chupana)
-  const authorName = localPost.isAnonymous ? 'Anonymous User' : localPost.author?.name || 'Unknown';
+  const authorName = post.isAnonymous ? 'Anonymous User' : post.author?.name || 'Unknown';
   
   // Check karna ki is user ne ye post save/bookmark ki hui hai ya nahi
-  const isSaved = user?.savedPosts?.includes(localPost._id);
+  const isSaved = user?.savedPosts?.includes(post._id);
 
   // Reaction ('relatable', 'support', 'helpful') add ya remove karne ka function
   const handleReaction = async (type) => {
     try {
       // Backend ko API call bhejna
-      const res = await reactToPost(localPost._id, type);
+      const res = await reactToPost(post._id, type);
       // Backend se jo nayi reaction list aayi, usko UI me update kar dena
-      setLocalPost((prev) => ({ ...prev, reactions: res.data.reactions }));
+      setPost((prev) => ({ ...prev, reactions: res.data.reactions }));
     } catch (err) {
       console.error('Reaction error:', err);
     }
@@ -59,7 +65,7 @@ export default function PostCard({ post, onUpdate }) {
   // Post ko Bookmark (Save) karne ka function
   const handleSave = async () => {
     try {
-      await savePost(localPost._id);
+      await savePost(post._id);
       // yahan state manually change nahi kar rahe kyunki wo Navbar walo ne handle kiya hai
     } catch (err) {
       console.error('Save error:', err);
@@ -69,7 +75,7 @@ export default function PostCard({ post, onUpdate }) {
   // AI Summary mangwane ka function
   const handleSummarize = async () => {
     // Agar pehle se AI summary aa chuki hai aur dikh rahi hai, toh isko hide (toggle off) kar do
-    if (showAI && localPost.aiSummary) {
+    if (showAI && post.aiSummary) {
       setShowAI(false);
       return;
     }
@@ -77,10 +83,10 @@ export default function PostCard({ post, onUpdate }) {
     setAiLoading(true);
     try {
       // Backend se API ke through AI insights lena
-      const res = await summarizePost(localPost._id);
+      const res = await summarizePost(post._id);
       
-      // Nayi AI summary ko localPost me save kar dena
-      setLocalPost((prev) => ({
+      // Nayi AI summary ko post me save kar dena
+      setPost((prev) => ({
         ...prev,
         aiSummary: res.data.summary,
         aiInsights: res.data.insights,
@@ -95,144 +101,76 @@ export default function PostCard({ post, onUpdate }) {
 
   // Agar post me kuch galat hai toh usko report karna
   const handleReport = async () => {
-    // Browser ka in-built prompt dikhana reason puchne ke liye
     const reason = window.prompt('Report reason (fake/spam/promotion/misleading):', 'promotion');
-    if (!reason) return; // Agar user ne cancel kar diya toh kuch mat karo
+    if (!reason) return;
     
+    setReporting(true);
     try {
-      setReporting(true);
-      await reportPost({ postId: localPost._id, reason: reason.toLowerCase(), details: '' });
-      window.alert('Report submitted. Thank you for helping keep the community safe.');
+      await reportPost(post._id, reason);
+      alert('Thank you for reporting. Our team will review it.');
     } catch (err) {
-      window.alert(err.response?.data?.error || 'Failed to report post');
+      console.error('Report error:', err);
     } finally {
       setReporting(false);
     }
   };
 
-  // Inline comment section ko kholne ya band karne ka function
-  const toggleComments = async () => {
-    if (!showComments) {
-      setShowComments(true); // Comments ka dabba khol do
-      
-      // Agar list pehle se khali hai, tabhi backend se fetch karo (baar baar fetch na ho)
-      if (comments.length === 0) {
-        setCommentsLoading(true);
-        try {
-          const res = await getPost(localPost._id);
-          setComments(res.data.comments || []);
-        } catch (err) {
-          console.error('Failed to load comments', err);
-        } finally {
-          setCommentsLoading(false);
-        }
-      }
-    } else {
-      setShowComments(false); // Dabba band kar do
-    }
-  };
-
-  // Naya comment post karne ka function
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault(); // Page refresh hone se roko
-    if (!commentText.trim()) return; // Agar khali comment hai toh bhejo mat
-    
-    setSubmittingComment(true);
-    try {
-      // Backend pe comment save karna
-      const res = await addComment(localPost._id, { content: commentText, isAnonymous: false });
-      
-      // Jo naya comment aaya hai usko purane comments ki list me sabse upar laga do
-      setComments([res.data.comment, ...comments]);
-      
-      // Input box ko khali kardo
-      setCommentText('');
-      
-      // Total comment count badha do UI me
-      setLocalPost(prev => ({ ...prev, commentCount: (prev.commentCount || 0) + 1 }));
-    } catch (err) {
-      console.error('Failed to post comment', err);
-    } finally {
-      setSubmittingComment(false);
-    }
-  };
-
-  const reactionCount = (type) => localPost.reactions?.[type]?.length || 0;
-  const hasReacted = (type) => localPost.reactions?.[type]?.includes(user?._id);
-
   return (
-    <article
-      className="glass rounded-2xl p-6 hover:border-white/15 transition-all duration-300 animate-fade-in-up"
-      id={`post-${localPost._id}`}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+    <div className="card-glass p-5 mb-6 group animate-fade-in hover:shadow-2xl transition-all duration-300">
+      {/* Header: Author Info & Privacy */}
+      <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-primary-500 flex items-center justify-center text-white font-bold text-sm">
-            {authorName[0]?.toUpperCase()}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white shadow-lg">
+            {post.isAnonymous ? <Shield className="w-5 h-5" /> : <User className="w-5 h-5" />}
           </div>
           <div>
-            <Link
-              to={localPost.isAnonymous ? '#' : `/profile/${localPost.author?._id}`}
-              className="text-sm font-bold text-slate-800 hover:text-teal-600 transition-colors"
-            >
-              {authorName}
-            </Link>
-            {localPost.author?.isVerified && (
-              <span className="tag tag-teal">Verified User</span>
-            )}
-            <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400">
-              <Clock className="w-3 h-3" />
-              {new Date(localPost.createdAt).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-              {localPost.isAnonymous && (
-                <span className="flex items-center gap-1 text-accent-400">
-                  <Shield className="w-3 h-3" /> Anonymous
-                </span>
+            <h3 className="text-sm font-bold text-slate-800 leading-tight">{authorName}</h3>
+            <div className="flex items-center gap-2 text-[10px] text-dark-500 font-medium">
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(post.createdAt).toLocaleDateString()}</span>
+              {post.isPrivate ? (
+                <span className="flex items-center gap-1 text-amber-500"><Lock className="w-3 h-3" /> Private</span>
+              ) : (
+                <span className="flex items-center gap-1 text-teal-500"><Globe className="w-3 h-3" /> Public</span>
               )}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {localPost.isPrivate ? (
-            <span className="tag tag-rose flex items-center gap-1"><Lock className="w-3 h-3" /> Private</span>
-          ) : (
-            <span className="tag tag-teal flex items-center gap-1"><Globe className="w-3 h-3" /> Public</span>
-          )}
-          <span className={`tag ${SEVERITY_COLORS[localPost.severityLevel] || 'tag-primary'}`}>
-            {localPost.severityLevel || 'moderate'}
+        
+        {/* Severity Badge */}
+        <div className="flex flex-col items-end gap-2">
+          <span className={`tag ${SEVERITY_COLORS[post.severityLevel] || 'tag-primary'} text-[10px] uppercase tracking-wider font-bold px-2 py-1`}>
+            {post.severityLevel}
           </span>
+          {isAuthor && <span className="text-[10px] font-bold text-primary-500 bg-primary-50 px-1.5 py-0.5 rounded">YOUR POST</span>}
         </div>
       </div>
 
-      {/* Title */}
-      <h3 className="text-xl font-black text-slate-800 mb-2 leading-tight">{localPost.title}</h3>
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <span className="tag tag-primary">Trust {localPost.trustScore ?? 100}/100</span>
-        {localPost.outcome && (
-          <span className={`tag ${localPost.outcome === 'worse' ? 'tag-rose' : localPost.outcome === 'improved' ? 'tag-teal' : 'tag-primary'}`}>
-            Outcome: {localPost.outcome}
-          </span>
-        )}
-        {localPost.moderationStatus === 'under-review' && <span className="tag tag-rose">Under Review</span>}
+      {/* Post Title */}
+      <Link to={`/post/${post._id}`} className="block group/title">
+        <h2 className="text-xl font-extrabold text-slate-900 mb-2 leading-tight group-hover/title:text-primary-600 transition-colors">
+          {post.title}
+        </h2>
+      </Link>
+
+      {/* Status Badges (Hidden if none) */}
+      <div className="flex flex-wrap gap-2 mb-3">
+        {post.moderationStatus === 'published' && <span className="tag tag-teal">Verified Experience</span>}
+        {post.moderationStatus === 'under-review' && <span className="tag tag-rose">Under Review</span>}
       </div>
 
       {/* Description */}
       <p className="text-slate-600 text-sm leading-relaxed mb-4 font-medium">
         {expanded
-          ? localPost.description
-          : localPost.description?.length > 200
-          ? localPost.description.substring(0, 200) + '...'
-          : localPost.description}
+          ? post.description
+          : post.description?.length > 200
+          ? post.description.substring(0, 200) + '...'
+          : post.description}
       </p>
 
       {/* Images */}
-      {localPost.images?.length > 0 && (
-        <div className={`grid gap-2 mb-4 ${localPost.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-          {localPost.images.map((img, i) => (
+      {post.images?.length > 0 && (
+        <div className={`grid gap-2 mb-4 ${post.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          {post.images.map((img, i) => (
             <div key={i} className="relative aspect-video rounded-xl overflow-hidden group shadow-md bg-slate-100">
               <img 
                 src={img.startsWith('http') ? img : `https://disease-project-1.onrender.com${img}`} 
@@ -248,153 +186,113 @@ export default function PostCard({ post, onUpdate }) {
         </div>
       )}
 
-      {localPost.description?.length > 200 && (
+      {post.description?.length > 200 && (
         <button
           onClick={() => setExpanded(!expanded)}
           className="text-teal-400 text-xs font-medium flex items-center gap-1 mb-3 hover:text-teal-300"
         >
-          {expanded ? (
-            <>Show less <ChevronUp className="w-3 h-3" /></>
-          ) : (
-            <>Read more <ChevronDown className="w-3 h-3" /></>
-          )}
+          {expanded ? <><ChevronUp className="w-3 h-3" /> Show Less</> : <><ChevronDown className="w-3 h-3" /> Read More</>}
         </button>
       )}
 
-      {/* Tags */}
-      {(localPost.tags?.length > 0 || localPost.symptoms?.length > 0 || localPost.treatments?.length > 0) && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {localPost.tags?.map((tag) => (
-            <span key={tag} className="tag tag-primary">{tag}</span>
-          ))}
-          {localPost.symptoms?.map((s) => (
-            <span key={s} className="tag tag-rose">🩺 {s}</span>
-          ))}
-          {localPost.treatments?.map((t) => (
-            <span key={t} className="tag tag-teal">💊 {t}</span>
-          ))}
-        </div>
-      )}
+      {/* Tags & Symptoms */}
+      <div className="flex flex-wrap gap-1.5 mb-5">
+        {post.tags?.map((t, i) => (
+          <span key={i} className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] rounded-full font-bold">#{t}</span>
+        ))}
+        {post.treatments?.map((t, i) => (
+          <span key={i} className="px-2 py-0.5 bg-teal-50 text-teal-600 text-[10px] rounded-full font-bold flex items-center gap-1">
+            <Handshake className="w-2.5 h-2.5" /> {t}
+          </span>
+        ))}
+      </div>
 
-      {/* AI Summary */}
-      {showAI && localPost.aiSummary && (
-        <div className="glass rounded-xl p-4 mb-4 border-l-2 border-accent-500">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-accent-400" />
-            <span className="text-xs font-semibold text-accent-400">AI Summary</span>
+      {/* Actions: Reactions & Sharing */}
+      <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+        <div className="flex items-center gap-1 sm:gap-2">
+          {/* Relatable Reaction */}
+          <button
+            onClick={() => handleReaction('relatable')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all duration-300 text-xs font-bold ${
+              post.reactions?.relatable?.includes(user?._id)
+                ? 'bg-rose-50 text-rose-500'
+                : 'hover:bg-slate-50 text-dark-400'
+            }`}
+          >
+            <Heart className={`w-4 h-4 ${post.reactions?.relatable?.includes(user?._id) ? 'fill-current' : ''}`} />
+            <span>{post.reactions?.relatable?.length || 0}</span>
+          </button>
+
+          {/* Support Reaction */}
+          <button
+            onClick={() => handleReaction('support')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all duration-300 text-xs font-bold ${
+              post.reactions?.support?.includes(user?._id)
+                ? 'bg-primary-50 text-primary-500'
+                : 'hover:bg-slate-50 text-dark-400'
+            }`}
+          >
+            <Handshake className="w-4 h-4" />
+            <span>{post.reactions?.support?.length || 0}</span>
+          </button>
+
+          {/* Helpful Reaction */}
+          <button
+            onClick={() => handleReaction('helpful')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all duration-300 text-xs font-bold ${
+              post.reactions?.helpful?.includes(user?._id)
+                ? 'bg-amber-50 text-amber-500'
+                : 'hover:bg-slate-50 text-dark-400'
+            }`}
+          >
+            <Lightbulb className="w-4 h-4" />
+            <span>{post.reactions?.helpful?.length || 0}</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* AI Toggle */}
+          <button
+            onClick={handleSummarize}
+            disabled={aiLoading}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
+              showAI ? 'bg-primary-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <Sparkles className={`w-4 h-4 ${aiLoading ? 'animate-pulse' : ''}`} />
+            {aiLoading ? 'Thinking...' : 'AI Insights'}
+          </button>
+
+          <button onClick={handleSave} className="p-2 rounded-full hover:bg-slate-50 transition-colors text-dark-400">
+            {isSaved ? <BookmarkCheck className="w-5 h-5 text-primary-500" /> : <Bookmark className="w-5 h-5" />}
+          </button>
+          
+          <Link to={`/post/${post._id}`} className="p-2 rounded-full hover:bg-slate-50 transition-colors text-dark-400">
+            <Eye className="w-5 h-5" />
+          </Link>
+        </div>
+      </div>
+
+      {/* AI Summary Box */}
+      {showAI && (post.aiSummary || post.aiInsights) && (
+        <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-primary-50 to-white border border-primary-100 animate-fade-in-up">
+          <div className="flex items-center gap-2 mb-3 text-primary-600">
+            <Sparkles className="w-4 h-4" />
+            <h4 className="text-xs font-extrabold uppercase tracking-widest">AI Experience Analysis</h4>
           </div>
-          <p className="text-sm text-dark-200">{localPost.aiSummary}</p>
-          {localPost.aiInsights && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {localPost.aiInsights.detectedTriggers?.map((t) => (
-                <span key={t} className="tag tag-rose text-xs">⚡ {t}</span>
-              ))}
-              {localPost.aiInsights.detectedTreatments?.map((t) => (
-                <span key={t} className="tag tag-teal text-xs">💊 {t}</span>
-              ))}
-              {localPost.aiInsights.detectedOutcomes?.map((t) => (
-                <span key={t} className="tag tag-primary text-xs">📊 {t}</span>
+          {post.aiSummary && <p className="text-slate-700 text-xs italic leading-relaxed mb-3">"{post.aiSummary}"</p>}
+          {post.aiInsights?.length > 0 && (
+            <div className="space-y-2">
+              {post.aiInsights.map((insight, i) => (
+                <div key={i} className="flex gap-2 text-[11px] text-slate-600">
+                  <div className="w-1 h-1 rounded-full bg-primary-400 mt-1.5 shrink-0" />
+                  <span className="font-medium">{insight}</span>
+                </div>
               ))}
             </div>
           )}
         </div>
       )}
-
-      {/* Actions */}
-      <div className="flex items-center justify-between pt-3 border-t border-white/5">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleReaction('relatable')}
-            className={`reaction-btn active:scale-90 transition-transform ${hasReacted('relatable') ? 'active text-rose-400' : ''}`}
-          >
-            <Heart className="w-3.5 h-3.5" /> {reactionCount('relatable') || ''}
-          </button>
-          <button
-            onClick={() => handleReaction('support')}
-            className={`reaction-btn active:scale-90 transition-transform ${hasReacted('support') ? 'active text-primary-400' : ''}`}
-          >
-            <Handshake className="w-3.5 h-3.5" /> {reactionCount('support') || ''}
-          </button>
-          <button
-            onClick={() => handleReaction('helpful')}
-            className={`reaction-btn active:scale-90 transition-transform ${hasReacted('helpful') ? 'active text-teal-400' : ''}`}
-          >
-            <Lightbulb className="w-3.5 h-3.5" /> {reactionCount('helpful') || ''}
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleSummarize}
-            disabled={aiLoading}
-            className={`reaction-btn ${showAI ? 'text-white bg-accent-500/20' : 'text-accent-400'}`}
-          >
-            <Sparkles className={`w-3.5 h-3.5 ${aiLoading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">AI</span>
-          </button>
-          <button onClick={toggleComments} className="reaction-btn text-teal-400 hover:bg-teal-400/10">
-            <MessageSquare className="w-3.5 h-3.5" /> {localPost.commentCount || 0}
-          </button>
-          <button onClick={handleSave} className="reaction-btn">
-            {isSaved ? (
-              <BookmarkCheck className="w-3.5 h-3.5 text-teal-400" />
-            ) : (
-              <Bookmark className="w-3.5 h-3.5" />
-            )}
-          </button>
-          <button onClick={handleReport} disabled={reporting} className="reaction-btn text-rose-400">
-            Report
-          </button>
-        </div>
-      </div>
-
-      {/* Inline Comments Section */}
-      {showComments && (
-        <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in-up">
-          <form onSubmit={handleCommentSubmit} className="flex gap-2 mb-4">
-            <input
-              type="text"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Add a comment..."
-              className="input-dark flex-1 text-sm py-2 px-3"
-            />
-            <button
-              type="submit"
-              disabled={submittingComment || !commentText.trim()}
-              className="btn-primary p-2 px-4 flex items-center justify-center disabled:opacity-50"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
-          
-          <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-            {commentsLoading ? (
-              <div className="text-center text-xs text-dark-400 py-2">Loading comments...</div>
-            ) : comments.length > 0 ? (
-              comments.map(c => (
-                <div key={c._id} className="bg-white/5 rounded-lg p-3 text-sm">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary-500 to-teal-500 flex items-center justify-center">
-                      <User className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="font-medium text-white text-xs">{c.isAnonymous ? 'Anonymous' : c.author?.name}</span>
-                    <span className="text-[10px] text-dark-500">{new Date(c.createdAt).toLocaleDateString()}</span>
-                  </div>
-                  <p className="text-dark-200 pl-7 text-xs">{c.content}</p>
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-xs text-dark-500 py-2">No comments yet. Be the first to share your thoughts!</p>
-            )}
-          </div>
-          <div className="mt-2 text-center">
-             <Link to={`/post/${localPost._id}`} className="text-xs text-teal-400 hover:underline">
-               View full discussion
-             </Link>
-          </div>
-        </div>
-      )}
-    </article>
+    </div>
   );
 }
