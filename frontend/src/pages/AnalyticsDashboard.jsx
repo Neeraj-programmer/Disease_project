@@ -19,15 +19,18 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 function StatCard({ icon: Icon, label, value, color, delay, loading }) {
   return (
-    <div className="glass rounded-2xl p-5 animate-fade-in-up" style={{ animationDelay: `${delay}ms` }}>
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center`}>
+    <div className="glass-dark rounded-2xl p-5 animate-fade-in-up border border-white/10 shadow-2xl relative overflow-hidden" style={{ animationDelay: `${delay}ms` }}>
+      {/* Background glow */}
+      <div className={`absolute top-0 right-0 w-24 h-24 ${color} opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2`} />
+      
+      <div className="flex items-center gap-3 mb-3 relative">
+        <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center shadow-lg shadow-teal-500/20`}>
           <Icon className="w-5 h-5 text-white" />
         </div>
-        <span className="text-sm text-dark-300">{label}</span>
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
       </div>
-      <p className="text-3xl font-bold text-white">
-        {value !== undefined && value !== null ? value : (loading ? '...' : '—')}
+      <p className="text-3xl font-black text-white tracking-tighter relative">
+        {value !== undefined && value !== null ? value : (loading ? '...' : '0')}
       </p>
     </div>
   );
@@ -59,6 +62,10 @@ export default function AnalyticsDashboard() {
   useEffect(() => {
     fetchAll();
   }, []);
+
+  useEffect(() => {
+    if (overview) console.log('DEBUG: Analytics Overview Updated:', overview);
+  }, [overview]);
 
   const fetchAll = async () => {
     setLoading(true);

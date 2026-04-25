@@ -54,7 +54,10 @@ export default function ProfilePage() {
       setProfile(res.data.user);
       updateUser(res.data.user);
       setEditing(false);
-    } catch {}
+      alert('Profile updated successfully!');
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to update profile');
+    }
     finally { setSaving(false); }
   };
 
