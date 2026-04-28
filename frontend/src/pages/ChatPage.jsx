@@ -138,7 +138,13 @@ export default function ChatPage() {
               <button key={u._id} onClick={() => selectUser(u)}
                 className={`w-full flex items-center gap-3 px-4 py-3 transition-all hover:bg-slate-50 ${selectedUser?._id === u._id ? 'bg-primary-50 border-l-4 border-primary-500 shadow-inner' : ''}`}>
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center shadow-md"><User className="w-5 h-5 text-white" /></div>
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center shadow-md">
+                    {u.avatar ? (
+                      <img src={u.avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-5 h-5 text-white" />
+                    )}
+                  </div>
                   {isOnline(u._id) && <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-500 fill-green-500 border-2 border-white rounded-full" />}
                 </div>
                 <div className="flex-1 text-left min-w-0">
@@ -158,7 +164,13 @@ export default function ChatPage() {
             <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-white/50">
               <button onClick={() => setSelectedUser(null)} className="md:hidden text-slate-500 hover:text-slate-800 mr-2 text-xl">←</button>
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-primary-500 flex items-center justify-center shadow-md"><User className="w-5 h-5 text-white" /></div>
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-teal-400 to-primary-500 flex items-center justify-center shadow-md">
+                  {selectedUser.avatar ? (
+                    <img src={selectedUser.avatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-5 h-5 text-white" />
+                  )}
+                </div>
                 {isOnline(selectedUser._id) && <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-500 fill-green-500 border-2 border-white rounded-full" />}
               </div>
               <div>

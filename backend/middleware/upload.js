@@ -13,11 +13,12 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
+    // Generate a truly unique name: Date + Random + Sanitized Original Name
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+    const sanitizedName = file.originalname.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
+    cb(null, `${file.fieldname}-${uniqueSuffix}-${sanitizedName}`);
   },
-});
+},);
 
 const fileFilter = (req, file, cb) => {
   const allowed = /jpeg|jpg|png|gif|webp/;

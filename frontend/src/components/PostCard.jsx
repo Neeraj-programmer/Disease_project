@@ -120,8 +120,14 @@ export default function PostCard({ post: propPost, onUpdate }) {
       {/* Header: Author Info & Privacy */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white shadow-lg">
-            {post.isAnonymous ? <Shield className="w-5 h-5" /> : <User className="w-5 h-5" />}
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white shadow-lg">
+            {post.isAnonymous ? (
+              <Shield className="w-5 h-5" />
+            ) : post.author?.avatar ? (
+              <img src={post.author.avatar} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-5 h-5" />
+            )}
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-800 leading-tight">{authorName}</h3>
@@ -173,14 +179,10 @@ export default function PostCard({ post: propPost, onUpdate }) {
           {post.images.map((img, i) => (
             <div key={i} className="relative aspect-video rounded-xl overflow-hidden group shadow-md bg-slate-100">
               <img 
-                src={img.startsWith('http') ? img : img} 
+                src={img} 
                 alt="" 
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&auto=format&fit=crop&q=60'; // Medical placeholder
-                }} 
-              />
+                loading="lazy"
             </div>
           ))}
         </div>

@@ -176,6 +176,13 @@ exports.createPost = async (req, res) => {
     post.aiInsights = await ai.extractInsights(post);
     await post.save(); // AI ka result bhi database me save kardo
 
+    // Increase author reputation for sharing
+    const author = await User.findById(req.userId);
+    if (author) {
+      author.reputationPoints = (author.reputationPoints || 0) + 10;
+      await author.save();
+    }
+
     const populated = await post.populate('author', 'name avatar isAnonymous isVerified trustLevel');
     res.status(201).json({
       post: populated,
@@ -286,6 +293,16 @@ exports.reactToPost = async (req, res) => {
           post: post._id,
           message: `reacted with "${type}" on your post "${post.title}"`,
         });
+
+        // Increase reputation and helpful count if it's a positive reaction
+        if (type === 'helpful' || type === 'support') {
+          const author = await User.findById(post.author);
+          if (author) {
+            author.postsHelpful = (author.postsHelpful || 0) + 1;
+            author.reputationPoints = (author.reputationPoints || 0) + 5;
+            await author.save();
+          }
+        }
       }
     }
     

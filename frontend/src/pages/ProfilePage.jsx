@@ -14,6 +14,8 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: '', bio: '', skinCondition: '', conditionDetails: '', triggers: '', treatments: '' });
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
 
   const isOwn = currentUser?._id === id;
 
@@ -42,23 +44,41 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const data = {
-        name: form.name,
-        bio: form.bio,
-        skinCondition: form.skinCondition,
-        conditionDetails: form.conditionDetails,
-        triggers: form.triggers.split(',').map(s => s.trim()).filter(Boolean),
-        treatments: form.treatments.split(',').map(s => s.trim()).filter(Boolean),
-      };
-      const res = await updateProfile(data);
+      const formData = new FormData();
+      formData.append('name', form.name);
+      formData.append('bio', form.bio);
+      formData.append('skinCondition', form.skinCondition);
+      formData.append('conditionDetails', form.conditionDetails);
+      
+      const triggersArr = form.triggers.split(',').map(s => s.trim()).filter(Boolean);
+      const treatmentsArr = form.treatments.split(',').map(s => s.trim()).filter(Boolean);
+      
+      triggersArr.forEach(t => formData.append('triggers', t));
+      treatmentsArr.forEach(t => formData.append('treatments', t));
+      
+      if (avatarFile) {
+        formData.append('avatar', avatarFile);
+      }
+
+      const res = await updateProfile(formData);
       setProfile(res.data.user);
       updateUser(res.data.user);
       setEditing(false);
+      setAvatarFile(null);
+      setAvatarPreview(null);
       alert('Profile updated successfully!');
     } catch (err) {
       alert(err.response?.data?.error || 'Failed to update profile');
     }
     finally { setSaving(false); }
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
   };
 
   if (loading) return (
@@ -85,9 +105,11 @@ export default function ProfilePage() {
         <div className="absolute -bottom-16 left-6 right-6 flex flex-col sm:flex-row items-end gap-6 px-4">
           {/* Avatar */}
           <div className="relative shrink-0 group">
-            <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-slate-900 p-1 shadow-2xl overflow-hidden">
+            <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-slate-900 p-1 shadow-2xl overflow-hidden relative">
               <div className="w-full h-full rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center border border-white/10 relative">
-                {profile.avatar ? (
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="" className="w-full h-full object-cover rounded-2xl" />
+                ) : profile.avatar ? (
                   <img src={profile.avatar} alt="" className="w-full h-full object-cover rounded-2xl" />
                 ) : (
                   <div className="flex flex-col items-center">
@@ -95,6 +117,17 @@ export default function ProfilePage() {
                     <span className="text-[10px] font-bold text-teal-500/50 uppercase tracking-widest">Profile</span>
                   </div>
                 )}
+                
+                {editing && (
+                  <label className="absolute inset-0 bg-black/60 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex flex-col items-center text-white">
+                      <Edit3 className="w-6 h-6 mb-1" />
+                      <span className="text-[10px] font-bold uppercase">Change</span>
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                  </label>
+                )}
+
                 {profile.isVerified && (
                   <div className="absolute -top-2 -right-2 w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center border-4 border-slate-900 shadow-lg" title="Verified Expert">
                     <Shield className="w-4 h-4 text-white" />
@@ -140,7 +173,7 @@ export default function ProfilePage() {
           {/* Stats Grid */}
           <div className="glass rounded-3xl p-6 grid grid-cols-2 gap-4 border border-white/5 shadow-xl">
             <div className="text-center p-4 rounded-2xl bg-white/5 border border-white/5">
-              <p className="text-2xl font-black text-white">{posts.length}</p>
+              <p className="text-2xl font-black text-teal-400">{posts.length}</p>
               <p className="text-[10px] font-bold text-dark-400 uppercase tracking-widest mt-1">Experiences</p>
             </div>
             <div className="text-center p-4 rounded-2xl bg-white/5 border border-white/5">
