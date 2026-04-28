@@ -158,7 +158,7 @@ exports.updateProfile = async (req, res) => {
 
     // Handle uploaded avatar
     if (req.file) {
-      updates.avatar = `/uploads/${req.file.filename}`;
+      updates.avatar = req.file.path;
     }
 
     const user = await User.findByIdAndUpdate(req.userId, updates, { new: true, runValidators: true });

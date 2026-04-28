@@ -118,7 +118,7 @@ exports.createPost = async (req, res) => {
 
     // Agar user ne images upload ki hain, toh unka path save karo
     if (req.files && req.files.length > 0) {
-      postData.images = req.files.map((file) => `/uploads/${file.filename}`);
+      postData.images = req.files.map((file) => file.path);
     }
 
     // ── SPAM CHECK ──
@@ -213,7 +213,7 @@ exports.updatePost = async (req, res) => {
 
     // Handle new images
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map((f) => `/uploads/${f.filename}`);
+      const newImages = req.files.map((f) => f.path);
       post.images = [...(post.images || []), ...newImages];
     }
 
