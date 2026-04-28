@@ -5,6 +5,8 @@ import { getConversations, getMessages, getChatUsers, moderateChatMessage } from
 import { io } from 'socket.io-client';
 import { Send, Search, MessageCircle, Users, Circle, User, Sparkles, Loader } from 'lucide-react';
 
+const BACKEND_URL = import.meta.env.PROD ? 'https://disease-project-1.onrender.com' : '';
+
 export default function ChatPage() {
   const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
@@ -140,7 +142,7 @@ export default function ChatPage() {
                 <div className="relative">
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center shadow-md">
                     {u.avatar ? (
-                      <img src={u.avatar} alt="" className="w-full h-full object-cover" />
+                      <img src={u.avatar.startsWith('http') ? u.avatar : `${BACKEND_URL}${u.avatar}`} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <User className="w-5 h-5 text-white" />
                     )}
@@ -166,7 +168,7 @@ export default function ChatPage() {
               <div className="relative">
                 <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-teal-400 to-primary-500 flex items-center justify-center shadow-md">
                   {selectedUser.avatar ? (
-                    <img src={selectedUser.avatar} alt="" className="w-full h-full object-cover" />
+                    <img src={selectedUser.avatar.startsWith('http') ? selectedUser.avatar : `${BACKEND_URL}${selectedUser.avatar}`} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-5 h-5 text-white" />
                   )}

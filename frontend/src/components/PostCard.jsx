@@ -12,6 +12,8 @@ const SEVERITY_COLORS = {
   'very-severe': 'tag-rose',// Bahut serious -> Red tag
 };
 
+const BACKEND_URL = import.meta.env.PROD ? 'https://disease-project-1.onrender.com' : '';
+
 export default function PostCard({ post: propPost, onUpdate }) {
   // Global auth state se current logged-in user ki details nikalna
   const { user } = useAuth();
@@ -124,7 +126,7 @@ export default function PostCard({ post: propPost, onUpdate }) {
             {post.isAnonymous ? (
               <Shield className="w-5 h-5" />
             ) : post.author?.avatar ? (
-              <img src={post.author.avatar} alt="" className="w-full h-full object-cover" />
+              <img src={post.author.avatar.startsWith('http') ? post.author.avatar : `${BACKEND_URL}${post.author.avatar}`} alt="" className="w-full h-full object-cover" />
             ) : (
               <User className="w-5 h-5" />
             )}
@@ -179,7 +181,7 @@ export default function PostCard({ post: propPost, onUpdate }) {
           {post.images.map((img, i) => (
             <div key={i} className="relative aspect-video rounded-xl overflow-hidden group shadow-md bg-slate-100">
               <img 
-                src={img} 
+                src={img.startsWith('http') ? img : `${BACKEND_URL}${img}`} 
                 alt="" 
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                 loading="lazy" 

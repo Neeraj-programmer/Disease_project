@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import PostCard from '../components/PostCard';
 import { User, Mail, Calendar, Shield, Edit3, Save, X, Sparkles, Stethoscope, Pill, Flame, Loader, MapPin, FileText, Heart, Activity } from 'lucide-react';
 
+const BACKEND_URL = import.meta.env.PROD ? 'https://disease-project-1.onrender.com' : '';
+
 export default function ProfilePage() {
   const { id } = useParams();
   const { user: currentUser, updateUser } = useAuth();
@@ -110,7 +112,7 @@ export default function ProfilePage() {
                 {avatarPreview ? (
                   <img src={avatarPreview} alt="" className="w-full h-full object-cover rounded-2xl" />
                 ) : profile.avatar ? (
-                  <img src={profile.avatar} alt="" className="w-full h-full object-cover rounded-2xl" />
+                  <img src={profile.avatar.startsWith('http') ? profile.avatar : `${BACKEND_URL}${profile.avatar}`} alt="" className="w-full h-full object-cover rounded-2xl" />
                 ) : (
                   <div className="flex flex-col items-center">
                     <User className="w-12 h-12 sm:w-16 sm:h-16 text-teal-400 mb-1" />
